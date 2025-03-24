@@ -83,25 +83,9 @@ workflow MITOMINE {
     // MODULE: ASSEMBLY - DE NOVO mitogenome assembly
     //
 
-    //NOVOPLASTY / MITOZ
-
-    //NOVOPLASTY (
-    //    ch_reads
-    //)
-
     ASSEMBLY (
         ch_reads
     )
-
-    //MITOZ
-
-    //MITOZ_ASSEMBLER (
-    //    ch_reads
-    //)
-
-    //GETORGANELE
-
-    //GETORGANELE (ch_reads)
 
     //
     // MODULE: Syteny and collinear
