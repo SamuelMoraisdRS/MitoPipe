@@ -6,6 +6,10 @@ include { POLISH                       } from '../../modules/local/novoplastypol
 include { NOVOPLASTYSET                } from '../../modules/local/novoplastyset.nf'
 include { MITOZ                        } from '../../modules/local/mitoz.nf'
 include { ISCIRC                       } from '../../modules/local/iscirc.nf'
+include { SEQTK_SEQ                    } from '../../modules/nf-core/seqtk/seq/main'                  
+//include { UNICYCLER } from '../modules/nf-core/unicycler/main'                  
+
+
 
 workflow ASSEMBLY {
 
@@ -52,6 +56,18 @@ workflow ASSEMBLY {
             POLISH.out.fasta
         )
 
+    //
+    // Unicycler
+    //
+
+        SEQTK_SEQ (
+            ISCIRC.out.fasta_for_annotation
+        )
+
+       // UNICYCLER (
+        //    SEQTK_SEQ.out.fastx    
+        //)
+
     }
     // ch_versions = ch_versions.mix(NOVOPLASTY.out.versions)
 
@@ -64,15 +80,10 @@ workflow ASSEMBLY {
         'Chordata', //params
         '2',        //params
         'Chordata', //params
-        'assemble'     //params
+        'assemble'  //params
     )
 
-    //
-    // GetOrganelle
-    //
 
-    //
-    // Unicycler
-    //
+
 }
 
