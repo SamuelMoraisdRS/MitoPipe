@@ -8,7 +8,7 @@ process UNICYCLER {
         'biocontainers/unicycler:0.5.0--py312hc60241a_5' }"
 
     input:
-    tuple val(meta), path(shortreads), path(longreads)
+    tuple val(meta), path(shortreads)
 
     output:
     tuple val(meta), path('*.scaffolds.fa.gz'), emit: scaffolds
@@ -23,13 +23,12 @@ process UNICYCLER {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def short_reads = shortreads ? ( meta.single_end ? "-s $shortreads" : "-1 ${shortreads[0]} -2 ${shortreads[1]}" ) : ""
-    def long_reads  = longreads ? "-l $longreads" : ""
+    //def long_reads  = longreads ? "-l $longreads" : ""
     """
     unicycler \\
         --threads $task.cpus \\
         $args \\
         $short_reads \\
-        $long_reads \\
         --out ./
 
     mv assembly.fasta ${prefix}.scaffolds.fa

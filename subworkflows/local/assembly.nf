@@ -2,12 +2,12 @@
 include { CREATE_FILE                  } from '../../modules/local/createfile.nf'
 include { POLISH_FILE                  } from '../../modules/local/polishfile.nf'
 include { NOVOPLASTY as NOVOPLASTY_RUN } from '../../modules/local/novoplasty.nf'
-include { POLISH                       } from '../../modules/local/novoplastypolish.nf'
+include { NOVOPLASTY as POLISH         } from '../../modules/local/novoplasty.nf'
 include { NOVOPLASTYSET                } from '../../modules/local/novoplastyset.nf'
 include { MITOZ                        } from '../../modules/local/mitoz.nf'
 include { ISCIRC                       } from '../../modules/local/iscirc.nf'
 include { SEQTK_SEQ                    } from '../../modules/nf-core/seqtk/seq/main'                  
-//include { UNICYCLER } from '../modules/nf-core/unicycler/main'                  
+include { UNICYCLER                    } from '../../modules/nf-core/unicycler/main'                  
 
 
 
@@ -22,38 +22,30 @@ workflow ASSEMBLY {
     // NOVOPlasty
     //
 
-    CREATE_FILE (
+    NOVOPLASTY_RUN (
         ch_reads,
         params.seed,
-        'first'
-    )
-
-    NOVOPLASTY_RUN (
-        CREATE_FILE.out.config,
-        CREATE_FILE.out.fastq1,
-        CREATE_FILE.out.fastq2,
-        params.seed,
         params.np_pl
     )
 
-    POLISH_FILE (
-        NOVOPLASTY_RUN.out.fastq1,
-        NOVOPLASTY_RUN.out.fastq2,
-        NOVOPLASTY_RUN.out.contigs
-    )
+    ch_polish_runs = NOVOPLASTY_RUN.out.fastq1
+        .join(NOVOPLASTY_RUN.out.fastq2)
+        .join(NOVOPLASTY_RUN.out.contigs)
+        .map { meta, fastq1, fastq2, contigs ->
+            [ meta, [ fastq1, fastq2 ], contigs ]
+        }
+
 
     POLISH (
-        POLISH_FILE.out.config,
-        NOVOPLASTY_RUN.out.fastq1,
-        NOVOPLASTY_RUN.out.fastq2,
-        NOVOPLASTY_RUN.out.contigs,
+        ch_polish_runs.map{ it -> [it[0], it[1]] },  // meta and reads
+        ch_polish_runs.map{ it -> it[2] },           // contigs as seed
         params.np_pl
     )
 
-    if (POLISH.out.fasta) {
+    if (POLISH.out.contigs) {
 
         ISCIRC (
-            POLISH.out.fasta
+            POLISH.out.contigs
         )
 
     //
@@ -64,12 +56,12 @@ workflow ASSEMBLY {
             ISCIRC.out.fasta_for_annotation
         )
 
-       // UNICYCLER (
-        //    SEQTK_SEQ.out.fastx    
-        //)
+        UNICYCLER (
+            SEQTK_SEQ.out.fastx    
+        )
 
     }
-    // ch_versions = ch_versions.mix(NOVOPLASTY.out.versions)
+     //ch_versions = ch_versions.mix(NOVOPLASTY.out.versions)
 
     //
     // MitoZ
