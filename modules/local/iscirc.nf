@@ -10,7 +10,7 @@ process ISCIRC {
     tuple val(meta), path(mitochondrion)
 
     output:
-    tuple val(meta), path('Circularized*.fa*'), optional: true     , emit: fasta_for_annotation
+    tuple val(meta), path('Circularized*.fa*', includeInputs:true), optional: true     , emit: fasta_for_annotation
 
     when:
     task.ext.when == null || task.ext.when
@@ -19,7 +19,7 @@ process ISCIRC {
     def args = task.ext.args ?: ''
 
     """
-    sed -i '1s/\$/ topology=circular/' ${mitochondrion}
+    sed -i '1s/\\>/ topology=circular/' ${mitochondrion}
     """
 
     stub:

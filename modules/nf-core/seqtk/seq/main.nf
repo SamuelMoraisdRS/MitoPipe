@@ -18,13 +18,13 @@ process SEQTK_SEQ {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
+    def args = task.ext.args ?: '-F "#"'
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     def extension = "fastq"
-    if ("$fastx" ==~ /.+\.fasta|.+\.fasta.gz|.+\.fa|.+\.fa.gz|.+\.fas|.+\.fas.gz|.+\.fna|.+\.fna.gz/ || "$args" ==~ /\-[aA]/ ) {
-        extension = "fasta"
-    }
+    //if ("$fastx" ==~ /.+\.fasta|.+\.fasta.gz|.+\.fa|.+\.fa.gz|.+\.fas|.+\.fas.gz|.+\.fna|.+\.fna.gz/ || "$args" ==~ /\-[aA]/ ) {
+    //    extension = "fasta"
+    //}
     """
     seqtk \\
         seq \\
