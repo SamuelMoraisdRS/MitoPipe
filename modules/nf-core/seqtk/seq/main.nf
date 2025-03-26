@@ -11,14 +11,14 @@ process SEQTK_SEQ {
     tuple val(meta), path(fastx)
 
     output:
-    tuple val(meta), path("*.gz")     , emit: fastx
+    tuple val(meta), path("*seqtk-seq.*")     , emit: fastx
     path "versions.yml"               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: '-F "#"'
+    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     def extension = "fastq"
@@ -28,9 +28,9 @@ process SEQTK_SEQ {
     """
     seqtk \\
         seq \\
-        $args \\
-        $fastx | \\
-        gzip -c > ${prefix}.seqtk-seq.${extension}.gz
+        -F '#' \\
+        $fastx \\
+        > ${prefix}.seqtk-seq.${extension}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
