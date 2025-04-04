@@ -15,7 +15,7 @@ process SAMPLESHEET_CHECK {
     path "versions.yml", emit: versions
 
     when:
-    task.ext.when == null || task.ext.when
+    task.ext.when != false
 
     script: // This script is bundled with the pipeline, in nf-core/mitomine/bin/
     """
