@@ -1,19 +1,9 @@
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    PRINT PARAMS SUMMARY
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+include { validateParameters; paramsHelp; paramsSummaryLog; paramsSummaryMap} from 'plugin/nf-validation'
 
-include { paramsSummaryLog; paramsSummaryMap } from 'plugin/nf-validation'
+workflowMitomine = new WorkflowMitomine(workflow: workflow, params: params)
 
-def logo = NfcoreTemplate.logo(workflow, params.monochrome_logs)
-def citation = '\n' + WorkflowMain.citation(workflow) + '\n'
-def summary_params = paramsSummaryMap(workflow)
 
-// Print parameter summary log to screen
-log.info logo + paramsSummaryLog(workflow) + citation
-
-WorkflowMitomine.initialise(params, log)
+workflowMitomine.initialise(log)
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,9 +43,6 @@ include { FASTQC                      } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
-
-
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -64,6 +51,8 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoft
 
 // Info required for completion email and summary
 def multiqc_report = []
+def summary_params = paramsSummaryMap(workflow)
+
 
 workflow MITOMINE {
 
@@ -78,15 +67,12 @@ workflow MITOMINE {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     ch_reads = INPUT_CHECK.out.reads
-
     //
     // MODULE: ASSEMBLY - DE NOVO mitogenome assembly
     //
-
     ASSEMBLY (
         ch_reads
     )
-
     //
     // MODULE: Syteny and collinear
     //
@@ -116,25 +102,25 @@ workflow MITOMINE {
     //
     // MODULE: MultiQC
     //
-    workflow_summary    = WorkflowMitomine.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
+//     workflow_summary    = workflowMitomine.getParamsSummaryMultiqc(summary_params)
+//     ch_workflow_summary = Channel.value(workflow_summary)
 
-    methods_description    = WorkflowMitomine.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
-    ch_methods_description = Channel.value(methods_description)
+//     methods_description    = workflowMitomine.methodsDescriptionText(ch_multiqc_custom_methods_description)
+//     ch_methods_description = Channel.value(methods_description)
 
-    //ch_multiqc_files = Channel.empty()
-    //ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    //ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    //ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    //ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+//     ch_multiqc_files = Channel.empty()
+//     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+//     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
+//     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+//     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
-   // MULTIQC (
-    //    ch_multiqc_files.collect(),
-    //    ch_multiqc_config.toList(),
-    //    ch_multiqc_custom_config.toList(),
-    //    ch_multiqc_logo.toList()
-    //)
-   // multiqc_report = MULTIQC.out.report.toList()
+//    MULTIQC (
+//        ch_multiqc_files.collect(),
+//        ch_multiqc_config.toList(),
+//        ch_multiqc_custom_config.toList(),
+//        ch_multiqc_logo.toList()
+//     )
+//    multiqc_report = MULTIQC.out.report.toList()
 }
 
 /*

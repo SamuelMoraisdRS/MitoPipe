@@ -6,10 +6,13 @@ import nextflow.Nextflow
 
 class WorkflowMain {
 
+    def workflow
+    def params
+
     //
-    // Citation string for pipeline
+    // Returns citation string for pipeline
     //
-    public static String citation(workflow) {
+    public String getCitation() {
         return "If you use ${workflow.manifest.name} for your analysis please cite:\n\n" +
             // TODO nf-core: Add Zenodo DOI for pipeline after first release
             //"* The pipeline\n" +
@@ -20,24 +23,27 @@ class WorkflowMain {
             "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
     }
 
+    public String getHelpString() {
+        def logo = NfcoreTemplate.logo(workflow, params.monochrome_logs)
+        def citation = '\n' + WorkflowMain.getCitation(workflow) + '\n'
+        String command = "nextflow run ${workflow.manifest.name} --input samplesheet.csv --genome GRCh37 -profile docker"
+        return logo + paramsHelp(command) + citation + NfcoreTemplate.dashedLine(params.monochrome_logs)
+    }
+
+    public String getVersionString() {
+        String workflow_version = NfcoreTemplate.version(workflow)
+        return "${workflow.manifest.name} ${workflow_version}"
+    }
 
     //
-    // Validate parameters and print summary to screen
+    // Validate pipeline parameters
     //
-    public static void initialise(workflow, params, log) {
-
-        // Print workflow version and exit on --version
-        if (params.version) {
-            String workflow_version = NfcoreTemplate.version(workflow)
-            log.info "${workflow.manifest.name} ${workflow_version}"
-            System.exit(0)
-        }
-
+    public void initialise(log) {
         // Check that a -profile or Nextflow config has been provided to run the pipeline
         NfcoreTemplate.checkConfigProvided(workflow, log)
 
         // Check that conda channels are set-up correctly
-        if (workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1) {
+        if (workflow.profile.contains('conda') || workflow.profile.contains('mamba')) {
             Utils.checkCondaChannels(log)
         }
 
@@ -52,12 +58,7 @@ class WorkflowMain {
     //
     // Get attribute from genome config file e.g. fasta
     //
-    public static Object getGenomeAttribute(params, attribute) {
-        if (params.genomes && params.genome && params.genomes.containsKey(params.genome)) {
-            if (params.genomes[ params.genome ].containsKey(attribute)) {
-                return params.genomes[ params.genome ][ attribute ]
-            }
-        }
-        return null
+    public Object getGenomeAttribute(attribute) {
+        return params?.genomes?.get(params?.genome)?.get(attribute)
     }
 }

@@ -7,12 +7,16 @@ import groovy.text.SimpleTemplateEngine
 
 class WorkflowMitomine {
 
+    def workflow
+
+    def params
+
     //
     // Check and validate parameters
     //
-    public static void initialise(params, log) {
+    public void initialise(log) {
         if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-            genomeNotFoundError(params, log)
+            genomeNotFoundError(log)
         }
         if (!params.fasta) {
             Nextflow.error "Genome fasta file not specified with e.g. '--fasta genome.fa' or via a detectable config file."
@@ -22,7 +26,7 @@ class WorkflowMitomine {
     //
     // Get workflow summary for MultiQC
     //
-    public static String paramsSummaryMultiqc(workflow, summary) {
+    public String getParamsSummaryMultiqc(summary) {
         String summary_section = ''
         for (group in summary.keySet()) {
             def group_params = summary.get(group)  // This gets the parameters of that particular group
@@ -50,7 +54,7 @@ class WorkflowMitomine {
     // Generate methods description for MultiQC
     //
 
-    public static String toolCitationText(params) {
+    public String getToolCitationText() {
         // TODO Optionally add in-text citation tools to this list.
         // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
         // Uncomment function in methodsDescriptionText to render in MultiQC report
@@ -64,7 +68,7 @@ class WorkflowMitomine {
         return citation_text
     }
 
-    public static String toolBibliographyText(params) {
+    public String getToolBibliographyText() {
         // TODO Optionally add bibliographic entries to this list.
         // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
         // Uncomment function in methodsDescriptionText to render in MultiQC report
@@ -76,11 +80,11 @@ class WorkflowMitomine {
         return reference_text
     }
 
-    public static String methodsDescriptionText(run_workflow, mqc_methods_yaml, params) {
+    public String methodsDescriptionText(mqc_methods_yaml) {
         // Convert  to a named map so can be used as with familar NXF ${workflow} variable syntax in the MultiQC YML file
         def meta = [:]
-        meta.workflow = run_workflow.toMap()
-        meta['manifest_map'] = run_workflow.manifest.toMap()
+        meta.workflow = workflow.toMap()
+        meta['manifest_map'] = workflow.manifest.toMap()
 
         // Pipeline DOI
         meta['doi_text'] = meta.manifest_map.doi ? "(doi: <a href=\'https://doi.org/${meta.manifest_map.doi}\'>${meta.manifest_map.doi}</a>)" : ''
@@ -105,7 +109,7 @@ class WorkflowMitomine {
     //
     // Exit pipeline if incorrect --genome key provided
     //
-    private static void genomeNotFoundError(params, log) {
+    private void genomeNotFoundError(log) {
         def error_string = '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n' +
                 "  Genome '${params.genome}' not found in any config files provided to the pipeline.\n" +
                 '  Currently, the available genome keys are:\n' +
